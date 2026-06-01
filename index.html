@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pong Game</title>
+    <title>Pong Game - Enhanced</title>
     <style>
         * {
             margin: 0;
@@ -16,118 +16,385 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #16213e 50%, #0f3460 100%);
+            font-family: 'Orbitron', 'Arial', sans-serif;
+            color: #00ff88;
+            overflow: hidden;
+        }
+
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
         }
 
         .container {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 20px;
+            gap: 25px;
+            z-index: 10;
         }
 
         h1 {
             color: #fff;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-            font-size: 2.5em;
+            text-shadow: 0 0 20px #00ff88, 0 0 40px #00ff88;
+            font-size: 3em;
+            letter-spacing: 3px;
+            animation: glow 2s ease-in-out infinite alternate;
+            text-transform: uppercase;
         }
 
-        #gameCanvas {
-            border: 3px solid #00ff88;
-            background: #000;
-            box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
-            cursor: none;
+        @keyframes glow {
+            from { text-shadow: 0 0 20px #00ff88, 0 0 40px #00ff88; }
+            to { text-shadow: 0 0 30px #00ff88, 0 0 60px #00ff88, 0 0 80px #00ff88; }
+        }
+
+        .game-info {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
         }
 
         .scoreboard {
             display: flex;
-            gap: 60px;
+            gap: 80px;
             font-size: 1.5em;
             color: #00ff88;
             text-shadow: 0 0 10px rgba(0, 255, 136, 0.7);
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px 40px;
+            border-radius: 10px;
+            border: 2px solid #00ff88;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
         }
 
         .score-item {
             text-align: center;
+            min-width: 120px;
         }
 
         .score-item h3 {
-            font-size: 0.8em;
-            margin-bottom: 5px;
+            font-size: 0.7em;
+            margin-bottom: 8px;
             color: #88ff00;
+            letter-spacing: 2px;
         }
 
         .score {
-            font-size: 2em;
+            font-size: 2.5em;
             font-weight: bold;
+            color: #00ff88;
         }
 
-        .controls {
-            color: #fff;
-            text-align: center;
-            font-size: 0.9em;
+        .difficulty-selector {
+            display: flex;
+            gap: 10px;
+            align-items: center;
             background: rgba(0, 0, 0, 0.3);
-            padding: 15px 25px;
+            padding: 12px 20px;
             border-radius: 8px;
+            border: 2px solid #00ff88;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+        }
+
+        .difficulty-selector label {
+            color: #00ff88;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .difficulty-selector select {
+            background: #000;
+            color: #00ff88;
             border: 1px solid #00ff88;
-        }
-
-        .controls p {
-            margin: 5px 0;
-        }
-
-        .reset-btn {
-            margin-top: 20px;
-            padding: 10px 30px;
-            font-size: 1em;
-            background: #00ff88;
-            color: #000;
-            border: none;
-            border-radius: 5px;
+            padding: 6px 12px;
+            border-radius: 4px;
             cursor: pointer;
             font-weight: bold;
             transition: all 0.3s ease;
         }
 
-        .reset-btn:hover {
-            background: #88ff00;
-            transform: scale(1.05);
-            box-shadow: 0 0 15px rgba(0, 255, 136, 0.7);
+        .difficulty-selector select:hover {
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
         }
 
-        .reset-btn:active {
+        .game-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        #gameCanvas {
+            border: 3px solid #00ff88;
+            background: #000;
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.5), inset 0 0 20px rgba(0, 255, 136, 0.1);
+            cursor: none;
+            display: block;
+        }
+
+        .game-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 100;
+            border-radius: 2px;
+        }
+
+        .game-overlay.show {
+            display: flex;
+        }
+
+        .overlay-content {
+            text-align: center;
+            background: rgba(0, 20, 40, 0.95);
+            padding: 40px;
+            border-radius: 10px;
+            border: 2px solid #00ff88;
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.6);
+        }
+
+        .overlay-content h2 {
+            font-size: 2.5em;
+            color: #00ff88;
+            margin-bottom: 20px;
+            text-shadow: 0 0 15px rgba(0, 255, 136, 0.8);
+        }
+
+        .overlay-content p {
+            font-size: 1.2em;
+            color: #88ff00;
+            margin: 10px 0;
+        }
+
+        .controls-section {
+            color: #fff;
+            text-align: center;
+            font-size: 0.95em;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px 30px;
+            border-radius: 10px;
+            border: 2px solid #00ff88;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+            max-width: 600px;
+        }
+
+        .controls-section h3 {
+            color: #88ff00;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .controls-section p {
+            margin: 8px 0;
+            color: #00ff88;
+        }
+
+        .buttons-container {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            font-size: 1em;
+            background: linear-gradient(135deg, #00ff88 0%, #88ff00 100%);
+            color: #000;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+        }
+
+        .btn:hover {
+            transform: scale(1.08);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.7);
+            background: linear-gradient(135deg, #88ff00 0%, #00ff88 100%);
+        }
+
+        .btn:active {
             transform: scale(0.95);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #ff00ff 0%, #ff88ff 100%);
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.3);
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.7);
+            background: linear-gradient(135deg, #ff88ff 0%, #ff00ff 100%);
+        }
+
+        .stats {
+            display: flex;
+            gap: 40px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px 30px;
+            border-radius: 8px;
+            border: 1px solid #00ff88;
+            font-size: 0.9em;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #88ff00;
+        }
+
+        .stat-value {
+            color: #00ff88;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .footer {
+            color: #888;
+            font-size: 0.8em;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2em;
+            }
+
+            .scoreboard {
+                gap: 40px;
+                padding: 15px 25px;
+            }
+
+            #gameCanvas {
+                width: 100%;
+                height: auto;
+            }
         }
     </style>
 </head>
 <body>
+    <div class="stars" id="starsContainer"></div>
+
     <div class="container">
-        <h1>🎮 PONG GAME 🎮</h1>
+        <h1>⚡ PONG ARENA ⚡</h1>
         
-        <div class="scoreboard">
-            <div class="score-item">
-                <h3>PLAYER</h3>
-                <div class="score" id="playerScore">0</div>
+        <div class="game-info">
+            <div class="scoreboard">
+                <div class="score-item">
+                    <h3>PLAYER</h3>
+                    <div class="score" id="playerScore">0</div>
+                </div>
+                <div class="score-item">
+                    <h3>AI</h3>
+                    <div class="score" id="computerScore">0</div>
+                </div>
             </div>
-            <div class="score-item">
-                <h3>COMPUTER</h3>
-                <div class="score" id="computerScore">0</div>
+
+            <div class="difficulty-selector">
+                <label for="difficultyLevel">Difficulty:</label>
+                <select id="difficultyLevel" onchange="changeDifficulty()">
+                    <option value="easy">🟢 Easy</option>
+                    <option value="medium" selected>🟡 Medium</option>
+                    <option value="hard">🔴 Hard</option>
+                    <option value="extreme">⚫ Extreme</option>
+                </select>
             </div>
         </div>
 
-        <canvas id="gameCanvas" width="800" height="400"></canvas>
+        <div class="game-container">
+            <canvas id="gameCanvas" width="800" height="400"></canvas>
+            <div class="game-overlay" id="gameOverlay">
+                <div class="overlay-content">
+                    <h2 id="overlayTitle">GAME PAUSED</h2>
+                    <p id="overlayMessage">Press SPACE to continue</p>
+                </div>
+            </div>
+        </div>
 
-        <div class="controls">
-            <p><strong>Controls:</strong></p>
+        <div class="controls-section">
+            <h3>⌨️ How to Play</h3>
             <p>🖱️ Move Mouse Up/Down or ⬆️⬇️ Arrow Keys to control left paddle</p>
-            <p>Computer controls the right paddle</p>
+            <p>🤖 AI controls the right paddle - Adjust difficulty to challenge yourself!</p>
+            <p>🔄 SPACE to Pause/Resume • R to Reset • Reach the highest score!</p>
         </div>
 
-        <button class="reset-btn" onclick="resetGame()">Reset Game</button>
+        <div class="stats">
+            <div class="stat-item">
+                <span>Ball Speed:</span>
+                <span class="stat-value" id="ballSpeed">5.0</span>
+            </div>
+            <div class="stat-item">
+                <span>Difficulty:</span>
+                <span class="stat-value" id="difficultyDisplay">MEDIUM</span>
+            </div>
+            <div class="stat-item">
+                <span>Time:</span>
+                <span class="stat-value" id="gameTime">00:00</span>
+            </div>
+        </div>
+
+        <div class="buttons-container">
+            <button class="btn" onclick="resetGame()">🔄 Reset Game</button>
+            <button class="btn btn-secondary" onclick="togglePause()">⏸️ Pause/Resume</button>
+        </div>
+
+        <div class="footer">
+            <p>🎮 Enhanced Pong Game | Built with HTML5 Canvas, CSS3 & JavaScript</p>
+        </div>
     </div>
 
     <script>
+        // Generate stars
+        function generateStars() {
+            const starsContainer = document.getElementById('starsContainer');
+            for (let i = 0; i < 100; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDelay = Math.random() * 3 + 's';
+                starsContainer.appendChild(star);
+            }
+        }
+        generateStars();
+
         // Canvas setup
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
@@ -166,6 +433,17 @@
             speed: 5
         };
 
+        // Game state
+        let gamePaused = false;
+        let gameStartTime = Date.now();
+        let difficulty = 'medium';
+        const difficultySettings = {
+            easy: { speed: 3, ai: 0.5, ballSpeed: 4 },
+            medium: { speed: 4.5, ai: 0.8, ballSpeed: 5 },
+            hard: { speed: 6, ai: 0.95, ballSpeed: 6.5 },
+            extreme: { speed: 7.5, ai: 0.98, ballSpeed: 8 }
+        };
+
         // Input handling
         const keys = {};
         const mouse = {
@@ -174,6 +452,14 @@
 
         window.addEventListener('keydown', (e) => {
             keys[e.key] = true;
+            
+            if (e.key === ' ') {
+                e.preventDefault();
+                togglePause();
+            }
+            if (e.key.toLowerCase() === 'r') {
+                resetGame();
+            }
         });
 
         window.addEventListener('keyup', (e) => {
@@ -185,11 +471,34 @@
             mouse.y = e.clientY - rect.top;
         });
 
+        // Pause toggle
+        function togglePause() {
+            gamePaused = !gamePaused;
+            const overlay = document.getElementById('gameOverlay');
+            if (gamePaused) {
+                overlay.classList.add('show');
+                document.getElementById('overlayTitle').textContent = 'PAUSED';
+                document.getElementById('overlayMessage').textContent = 'Press SPACE to resume';
+            } else {
+                overlay.classList.remove('show');
+            }
+        }
+
+        // Change difficulty
+        function changeDifficulty() {
+            difficulty = document.getElementById('difficultyLevel').value;
+            const settings = difficultySettings[difficulty];
+            computer.speed = settings.speed;
+            ball.speed = settings.ballSpeed;
+            document.getElementById('difficultyDisplay').textContent = difficulty.toUpperCase();
+        }
+
         // Update game state
         function update() {
-            // Player paddle control - priority: mouse movement, fallback to arrow keys
+            if (gamePaused) return;
+
+            // Player paddle control
             if (Math.abs(mouse.y - (player.y + player.height / 2)) > 5) {
-                // Mouse movement takes priority
                 const targetY = mouse.y - player.height / 2;
                 const diff = targetY - player.y;
                 player.dy = Math.sign(diff) * player.speed;
@@ -201,10 +510,8 @@
                 player.dy = 0;
             }
 
-            // Update player paddle position
             player.y += player.dy;
 
-            // Player paddle collision with walls
             if (player.y < 0) player.y = 0;
             if (player.y + player.height > canvas.height) {
                 player.y = canvas.height - player.height;
@@ -213,7 +520,8 @@
             // Computer AI
             const computerCenter = computer.y + computer.height / 2;
             const ballCenter = ball.y;
-            const aiDifficulty = 0.8;
+            const settings = difficultySettings[difficulty];
+            const aiDifficulty = settings.ai;
 
             if (Math.abs(computerCenter - ballCenter) > computer.speed * aiDifficulty) {
                 if (computerCenter < ballCenter) {
@@ -225,10 +533,8 @@
                 computer.dy = 0;
             }
 
-            // Update computer paddle position
             computer.y += computer.dy;
 
-            // Computer paddle collision with walls
             if (computer.y < 0) computer.y = 0;
             if (computer.y + computer.height > canvas.height) {
                 computer.y = canvas.height - computer.height;
@@ -252,8 +558,6 @@
             ) {
                 ball.dx = -ball.dx;
                 ball.x = player.x + player.width + ball.radius;
-                
-                // Add spin based on paddle movement
                 const deltaY = ball.y - (player.y + player.height / 2);
                 ball.dy += deltaY * 0.1;
             }
@@ -265,8 +569,6 @@
             ) {
                 ball.dx = -ball.dx;
                 ball.x = computer.x - ball.radius;
-                
-                // Add spin based on paddle movement
                 const deltaY = ball.y - (computer.y + computer.height / 2);
                 ball.dy += deltaY * 0.1;
             }
@@ -284,6 +586,7 @@
             // Update scoreboard
             document.getElementById('playerScore').textContent = player.score;
             document.getElementById('computerScore').textContent = computer.score;
+            document.getElementById('ballSpeed').textContent = ball.speed.toFixed(1);
         }
 
         // Draw game
@@ -292,30 +595,37 @@
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Draw center line
+            // Draw center line with animation
             ctx.strokeStyle = '#00ff88';
             ctx.setLineDash([10, 10]);
+            ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.moveTo(canvas.width / 2, 0);
             ctx.lineTo(canvas.width / 2, canvas.height);
             ctx.stroke();
             ctx.setLineDash([]);
 
-            // Draw paddles
+            // Draw paddles with glow
             ctx.fillStyle = '#00ff88';
-            ctx.shadowColor = 'rgba(0, 255, 136, 0.5)';
-            ctx.shadowBlur = 10;
+            ctx.shadowColor = 'rgba(0, 255, 136, 0.8)';
+            ctx.shadowBlur = 15;
             ctx.fillRect(player.x, player.y, player.width, player.height);
             ctx.fillRect(computer.x, computer.y, computer.width, computer.height);
-            ctx.shadowBlur = 0;
 
-            // Draw ball
+            // Draw ball with glow
             ctx.fillStyle = '#ff00ff';
-            ctx.shadowColor = 'rgba(255, 0, 255, 0.7)';
-            ctx.shadowBlur = 15;
+            ctx.shadowColor = 'rgba(255, 0, 255, 0.9)';
+            ctx.shadowBlur = 20;
             ctx.beginPath();
             ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
             ctx.fill();
+
+            // Draw ball trail
+            ctx.fillStyle = 'rgba(255, 0, 255, 0.2)';
+            ctx.beginPath();
+            ctx.arc(ball.x - ball.dx * 0.5, ball.y - ball.dy * 0.5, ball.radius * 0.8, 0, Math.PI * 2);
+            ctx.fill();
+
             ctx.shadowBlur = 0;
         }
 
@@ -323,8 +633,9 @@
         function resetBall() {
             ball.x = canvas.width / 2;
             ball.y = canvas.height / 2;
-            ball.dx = (Math.random() > 0.5 ? 1 : -1) * ball.speed;
-            ball.dy = (Math.random() - 0.5) * ball.speed;
+            const settings = difficultySettings[difficulty];
+            ball.dx = (Math.random() > 0.5 ? 1 : -1) * settings.ballSpeed;
+            ball.dy = (Math.random() - 0.5) * settings.ballSpeed;
         }
 
         // Reset entire game
@@ -333,15 +644,28 @@
             computer.score = 0;
             player.y = canvas.height / 2 - paddleHeight / 2;
             computer.y = canvas.height / 2 - paddleHeight / 2;
+            gamePaused = false;
+            gameStartTime = Date.now();
+            document.getElementById('gameOverlay').classList.remove('show');
             resetBall();
             document.getElementById('playerScore').textContent = '0';
             document.getElementById('computerScore').textContent = '0';
+        }
+
+        // Update game time
+        function updateGameTime() {
+            const elapsed = Math.floor((Date.now() - gameStartTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            document.getElementById('gameTime').textContent = 
+                `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
         }
 
         // Game loop
         function gameLoop() {
             update();
             draw();
+            updateGameTime();
             requestAnimationFrame(gameLoop);
         }
 
